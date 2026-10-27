@@ -28,6 +28,8 @@ function Gate() {
         <Stack.Screen name="(trainer)" />
         <Stack.Screen name="food/search" options={{ presentation: 'modal' }} />
         <Stack.Screen name="food/scan" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="food/details" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="food/saved" options={{ presentation: 'modal' }} />
         <Stack.Screen name="food/custom" options={{ presentation: 'modal' }} />
         <Stack.Screen name="program" />
         <Stack.Screen name="settings" />

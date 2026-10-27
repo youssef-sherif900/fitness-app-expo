@@ -143,7 +143,20 @@ export async function api<T = any>(path: string, opts: Opts = {}): Promise<T> {
   if (res.ok) return json as T;
 
   const retryAfter = Number(res.headers.get('Retry-After')) || undefined;
-  throw new ApiError(res.status, friendlyMessage(res.status, json), json?.errors ?? {}, retryAfter);
+  throw new ApiError(res.status, friendlyMessage(res.status, json), errorFields(json), retryAfter);
+}
+
+/** Error details live at `error.details` (API envelope) or the legacy top-level `errors`. */
+function errorFields(json: any): Record<string, string[]> {
+  const details = json?.error?.details ?? json?.errors;
+  if (!details || typeof details !== 'object' || Array.isArray(details)) return {};
+
+  const out: Record<string, string[]> = {};
+  for (const [key, value] of Object.entries(details)) {
+    if (Array.isArray(value)) out[key] = value.map(String);
+    else if (typeof value === 'string') out[key] = [value];
+  }
+  return out;
 }
 
 function friendlyMessage(status: number, json: any): string {
@@ -151,5 +164,6 @@ function friendlyMessage(status: number, json: any): string {
   if (status === 404) return "We couldn't find that.";
   if (status === 429) return 'Too many requests. Please try again shortly.';
   if (status >= 500) return 'Something went wrong on our side. Please try again.';
-  return json?.message ?? 'Something went wrong.';
+  const message = json?.error?.message ?? json?.message;
+  return typeof message === 'string' && message ? message : 'Something went wrong.';
 }

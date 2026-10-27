@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Alert } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
 import { Screen, Txt, Button, Card, Input } from '@/components/ui';
 import { useSession } from '@/auth/session';
 import * as endpoints from '@/api/endpoints';
 import { SyncBadge } from '@/components/SyncBadge';
+import { resetLocalDatabase } from '@/db';
+import { requestSync } from '@/sync';
 
 export default function Settings() {
   const router = useRouter();
+  const qc = useQueryClient();
   const user = useSession((s) => s.user);
   const [confirm, setConfirm] = useState('');
   const [busy, setBusy] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const mode = useSession((s) => s.mode);
 
@@ -23,6 +28,30 @@ export default function Settings() {
         'Could not switch mode',
         e instanceof Error ? e.message : 'Please try again.',
       );
+    }
+  };
+
+  const resetLocal = () =>
+    Alert.alert(
+      'Reset local data?',
+      'This clears the diary stored on this device and downloads it again from your account. Anything not synced yet will be lost.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Reset', style: 'destructive', onPress: () => { void runReset(); } },
+      ],
+    );
+
+  const runReset = async () => {
+    setResetting(true);
+    try {
+      await resetLocalDatabase();
+      qc.clear();
+      requestSync();
+      Alert.alert('Local data reset', 'Your diary will be downloaded again in the background.');
+    } catch (e) {
+      Alert.alert('Could not reset local data', e instanceof Error ? e.message : 'Try again.');
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -62,6 +91,11 @@ export default function Settings() {
         </Card>
       ) : null}
       <Card><Txt variant="label">Sync</Txt><SyncBadge /></Card>
+      <Card>
+        <Txt variant="label">Local data</Txt>
+        <Txt variant="muted">If foods or your diary cannot be read, reset the copy stored on this device. Synced data stays on your account.</Txt>
+        <Button title="Reset local data" variant="secondary" onPress={resetLocal} loading={resetting} />
+      </Card>
       <Button title="Sign out" variant="secondary" onPress={() => useSession.getState().signOut()} />
       <Card>
         <Txt variant="label">Delete account</Txt>

@@ -8,7 +8,8 @@ import { useSyncTriggers } from '@/sync';
 
 function Gate() {
   const status = useSession((s) => s.status);
-  useSyncTriggers(status === 'in');
+  const onboarded = useSession((s) => s.onboarded);
+  useSyncTriggers(status === 'in' && onboarded);
 
   if (status === 'loading') {
     return (
@@ -19,11 +20,16 @@ function Gate() {
   }
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={status === 'in'}>
+      <Stack.Protected guard={status === 'in' && !onboarded}>
+        <Stack.Screen name="(onboarding)" />
+      </Stack.Protected>
+      <Stack.Protected guard={status === 'in' && onboarded}>
         <Stack.Screen name="(client)" />
+        <Stack.Screen name="(trainer)" />
         <Stack.Screen name="food/search" options={{ presentation: 'modal' }} />
         <Stack.Screen name="food/scan" options={{ presentation: 'modal' }} />
         <Stack.Screen name="food/custom" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="program" />
         <Stack.Screen name="settings" />
       </Stack.Protected>
       <Stack.Protected guard={status === 'out'}>

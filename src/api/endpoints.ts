@@ -86,18 +86,40 @@ export const createWeight = async (body: Record<string, unknown>, key: string) =
 export const deleteWeight = (id: string | number) => api(`/body/weights/${id}`, { method: 'DELETE' });
 
 // ---------- Exercises ----------
-export const listExercises = async (query?: Record<string, string>) =>
-  unwrap<any[]>(await api('/exercises', { query }));
+type Page<T> = { data: T[]; meta?: { next_cursor: string | null; has_more: boolean } };
+const pageItems = <T = any>(page: any): T[] => (Array.isArray(page?.data) ? page.data : []);
+
+export const listExercises = async (query?: Record<string, string | number>) => {
+  const page = unwrap<Page<any>>(
+    await api('/exercises', { query: { per_page: 100, ...query } }),
+  );
+  return pageItems<any>(page);
+};
 export const getExercise = async (id: string | number) => unwrap<any>(await api(`/exercises/${id}`));
 
 // ---------- Training ----------
-export const listPrograms = async () => unwrap<any[]>(await api('/training/programs'));
-export const getCurrentProgram = async () => unwrap<any>(await api('/training/programs/current'));
+export const listPrograms = async (query?: Record<string, string>) => {
+  const page = unwrap<Page<any>>(await api('/training/programs', { query }));
+  return pageItems<any>(page);
+};
+export const getCurrentProgram = async () =>
+  unwrap<any>(await api('/training/programs/current'));
 export const getProgram = async (id: string | number) =>
   unwrap<any>(await api(`/training/programs/${id}`));
-export const listTemplates = async () => unwrap<any[]>(await api('/training/templates'));
-export const copyTemplate = async (id: string | number) =>
-  unwrap<any>(await api(`/training/templates/${id}/copy`, { method: 'POST' }));
+export const createProgram = async (body: Record<string, unknown>) =>
+  unwrap<any>(await api('/training/programs', { method: 'POST', body }));
+export const updateProgramDays = async (id: string | number, body: Record<string, unknown>) =>
+  unwrap<any>(await api(`/training/programs/${id}/days`, { method: 'PUT', body }));
+export const publishProgram = async (id: string | number) =>
+  unwrap<any>(await api(`/training/programs/${id}/publish`, { method: 'POST' }));
+export const archiveProgram = async (id: string | number) =>
+  unwrap<any>(await api(`/training/programs/${id}/archive`, { method: 'POST' }));
+export const listTemplates = async (query?: Record<string, string | number>) => {
+  const page = unwrap<Page<any>>(await api('/training/templates', { query }));
+  return pageItems<any>(page);
+};
+export const copyTemplate = async (id: string | number, body?: Record<string, unknown>) =>
+  unwrap<any>(await api(`/training/templates/${id}/copy`, { method: 'POST', body }));
 
 // ---------- Workouts ----------
 export const listWorkouts = async () => unwrap<any[]>(await api('/workouts'));
@@ -116,3 +138,19 @@ export const weeklyVolume = async () => unwrap<any>(await api('/progress/weekly-
 
 // ---------- Misc ----------
 export const health = () => api('/health', { auth: false });
+
+
+
+// ---------- Trainer Clients ----------
+export type TrainerClient = {
+  relationship_id: string;
+  id: string;
+  name: string;
+  email: string;
+  relationship_status: string;
+  scopes: string[];
+  connected_at: string;
+};
+
+export const getTrainerClients = async () =>
+  unwrap<TrainerClient[]>(await api('/trainer/clients'));

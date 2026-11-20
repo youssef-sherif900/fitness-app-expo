@@ -1,15 +1,22 @@
 import React from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { Screen, Txt, Card, Button, Empty, ErrorState, Skeleton } from '@/components/ui';
+import { useTheme } from '@/theme/tokens';
 import { ApiError } from '@/api/client';
 import * as endpoints from '@/api/endpoints';
 import { currentDays, currentProgram, dayItems, itemName, itemReps } from '@/features/training/payload';
+import { ExerciseThumb } from '@/features/training/ExerciseThumb';
+import { ExercisePreviewSheet } from '@/features/training/ExercisePreviewSheet';
 import { EXPERIENCE_LEVELS, GOALS } from '@/features/training/types';
+import type { Exercise } from '@/features/training/types';
 
 export default function Training() {
   const router = useRouter();
+  const { c } = useTheme();
+  const [preview, setPreview] = React.useState<Exercise | null>(null);
   const current = useQuery({
     queryKey: ['training', 'current'],
     queryFn: endpoints.getCurrentProgram,
@@ -85,11 +92,31 @@ export default function Training() {
                   </Txt>
                 </View>
                 {items.map((item, itemIndex) => (
-                  <View
+                  <Pressable
                     key={item.id ?? `${item.exercise_id}-${itemIndex}`}
-                    style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}
+                    onPress={() =>
+                      setPreview(
+                        item.exercise ?? {
+                          id: String(item.exercise_id ?? ''),
+                          name: itemName(item),
+                        },
+                      )
+                    }
+                    accessibilityRole="button"
+                    accessibilityLabel={`Preview ${itemName(item)}`}
+                    style={({ pressed }) => ({
+                      flexDirection: 'row',
+                      gap: 12,
+                      alignItems: 'center',
+                      opacity: pressed ? 0.7 : 1,
+                      paddingVertical: 4,
+                    })}
                   >
                     <Txt variant="label" style={{ width: 20 }}>{itemIndex + 1}</Txt>
+                    <ExerciseThumb
+                      exercise={{ name: itemName(item), slug: item.exercise?.slug }}
+                      size={40}
+                    />
                     <View style={{ flex: 1, gap: 2 }}>
                       <Txt style={{ fontWeight: '600' }}>{itemName(item)}</Txt>
                       <Txt variant="muted">
@@ -97,7 +124,8 @@ export default function Training() {
                         {item.rest_seconds ? ` · ${item.rest_seconds}s rest` : ''}
                       </Txt>
                     </View>
-                  </View>
+                    <Ionicons name="chevron-forward" size={16} color={c.muted} />
+                  </Pressable>
                 ))}
               </Card>
             );
@@ -110,6 +138,8 @@ export default function Training() {
           />
         </>
       ) : null}
+
+      <ExercisePreviewSheet exercise={preview} onClose={() => setPreview(null)} />
     </Screen>
   );
 }

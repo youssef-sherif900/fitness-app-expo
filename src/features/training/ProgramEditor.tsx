@@ -6,6 +6,8 @@ import { Button, Card, Input, Txt } from '@/components/ui';
 import { useTheme } from '@/theme/tokens';
 import { uuid } from '@/lib/util';
 import { ExercisePicker } from './ExercisePicker';
+import { ExerciseThumb } from './ExerciseThumb';
+import { ExercisePreviewSheet } from './ExercisePreviewSheet';
 import { prescriptionForExercise } from './generate';
 import type { DraftDay, DraftItem, DraftProgram, Exercise } from './types';
 
@@ -25,6 +27,7 @@ export function ProgramEditor({
   const { c, spacing, radius } = useTheme();
   const [picker, setPicker] = useState<Target | null>(null);
   const [editing, setEditing] = useState<Target | null>(null);
+  const [preview, setPreview] = useState<Exercise | null>(null);
 
   const editingItem = useMemo(() => {
     if (!editing) return null;
@@ -165,22 +168,19 @@ export function ProgramEditor({
                   opacity: pressed ? 0.75 : 1,
                 })}
               >
-                <View
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 14,
-                    backgroundColor: c.surface,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
+                <Pressable
+                  onPress={() => setPreview(item.exercise)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Preview ${item.exercise.name}`}
+                  hitSlop={6}
+                  style={{ width: 44, height: 44, borderRadius: 22 }}
                 >
-                  <Txt variant="label">{itemIndex + 1}</Txt>
-                </View>
+                  <ExerciseThumb exercise={item.exercise} size={44} />
+                </Pressable>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Txt style={{ fontWeight: '600' }}>{item.exercise.name}</Txt>
                   <Txt variant="muted">
-                    {item.sets} sets · {item.repMin}–{item.repMax} reps · {item.restSeconds}s rest
+                    {itemIndex + 1} · {item.sets} sets · {item.repMin}–{item.repMax} reps · {item.restSeconds}s rest
                   </Txt>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={c.muted} />
@@ -212,6 +212,8 @@ export function ProgramEditor({
         onClose={() => setPicker(null)}
         onSelect={chooseExercise}
       />
+
+      <ExercisePreviewSheet exercise={preview} onClose={() => setPreview(null)} />
 
       <Modal
         visible={Boolean(editing && editingItem)}

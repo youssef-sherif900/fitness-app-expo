@@ -1,20 +1,31 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Card, ErrorState, Screen, Skeleton, Txt } from '@/components/ui';
 import { InfoCard } from '@/components/Choice';
+import { useTheme } from '@/theme/tokens';
 import { FlowHeader } from '@/features/training/FlowHeader';
 import { trainingErrorLines } from '@/features/training/errors';
 import { dayItems, itemName, itemReps } from '@/features/training/payload';
-import { EXPERIENCE_LEVELS, GOALS, type ApiProgram } from '@/features/training/types';
+import { ExerciseThumb } from '@/features/training/ExerciseThumb';
+import { ExercisePreviewSheet } from '@/features/training/ExercisePreviewSheet';
+import {
+  EXPERIENCE_LEVELS,
+  GOALS,
+  type ApiProgram,
+  type Exercise,
+} from '@/features/training/types';
 import * as endpoints from '@/api/endpoints';
 
 export default function ProgramDetail() {
   const router = useRouter();
   const qc = useQueryClient();
+  const { c } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [lines, setLines] = useState<string[]>([]);
+  const [preview, setPreview] = useState<Exercise | null>(null);
 
   const query = useQuery({
     queryKey: ['training', 'program', id],
@@ -99,11 +110,31 @@ export default function ProgramDetail() {
                 </Txt>
                 {items.length === 0 ? <Txt variant="muted">No exercises yet.</Txt> : null}
                 {items.map((item, itemIndex) => (
-                  <View
+                  <Pressable
                     key={item.id ?? `${item.exercise_id}-${itemIndex}`}
-                    style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}
+                    onPress={() =>
+                      setPreview(
+                        item.exercise ?? {
+                          id: String(item.exercise_id ?? ''),
+                          name: itemName(item),
+                        },
+                      )
+                    }
+                    accessibilityRole="button"
+                    accessibilityLabel={`Preview ${itemName(item)}`}
+                    style={({ pressed }) => ({
+                      flexDirection: 'row',
+                      gap: 12,
+                      alignItems: 'center',
+                      opacity: pressed ? 0.7 : 1,
+                      paddingVertical: 4,
+                    })}
                   >
                     <Txt variant="label" style={{ width: 20 }}>{itemIndex + 1}</Txt>
+                    <ExerciseThumb
+                      exercise={{ name: itemName(item), slug: item.exercise?.slug }}
+                      size={40}
+                    />
                     <View style={{ flex: 1, gap: 2 }}>
                       <Txt style={{ fontWeight: '600' }}>{itemName(item)}</Txt>
                       <Txt variant="muted">
@@ -111,13 +142,16 @@ export default function ProgramDetail() {
                         {item.rest_seconds ? ` · ${item.rest_seconds}s rest` : ''}
                       </Txt>
                     </View>
-                  </View>
+                    <Ionicons name="chevron-forward" size={16} color={c.muted} />
+                  </Pressable>
                 ))}
               </Card>
             );
           })}
         </>
       ) : null}
+
+      <ExercisePreviewSheet exercise={preview} onClose={() => setPreview(null)} />
     </Screen>
   );
 }

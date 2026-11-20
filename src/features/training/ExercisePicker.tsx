@@ -1,10 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, Modal, Pressable, View } from 'react-native';
+import { FlatList, Modal, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Input, Txt } from '@/components/ui';
 import { Chip, ChipRow } from '@/components/Choice';
 import { useTheme } from '@/theme/tokens';
+import { ExerciseThumb } from './ExerciseThumb';
+import { ExercisePreviewBody } from './ExercisePreviewSheet';
 import { EQUIPMENT_LABELS, MUSCLE_LABELS, type Exercise } from './types';
 
 export function ExercisePicker({
@@ -25,6 +27,7 @@ export function ExercisePicker({
   const { c, spacing } = useTheme();
   const [search, setSearch] = useState('');
   const [muscle, setMuscle] = useState<string | null>(null);
+  const [preview, setPreview] = useState<Exercise | null>(null);
 
   const muscleOptions = useMemo(() => {
     const all = new Set<string>(initialMuscles);
@@ -52,6 +55,7 @@ export function ExercisePicker({
   const close = () => {
     setSearch('');
     setMuscle(null);
+    setPreview(null);
     onClose();
   };
 
@@ -65,7 +69,21 @@ export function ExercisePicker({
       <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }} edges={['top', 'bottom']}>
         <View style={{ padding: spacing.lg, gap: spacing.md }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Txt variant="title">{title}</Txt>
+            {preview ? (
+              <Pressable
+                onPress={() => setPreview(null)}
+                accessibilityRole="button"
+                accessibilityLabel="Back to the exercise list"
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 44, flexShrink: 1 }}
+              >
+                <Ionicons name="chevron-back" size={22} color={c.text} />
+                <Txt variant="title" numberOfLines={1} style={{ flexShrink: 1 }}>
+                  Exercise
+                </Txt>
+              </Pressable>
+            ) : (
+              <Txt variant="title">{title}</Txt>
+            )}
             <Pressable
               onPress={close}
               accessibilityRole="button"
@@ -75,28 +93,51 @@ export function ExercisePicker({
               <Ionicons name="close" size={24} color={c.text} />
             </Pressable>
           </View>
-          <Input
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Search exercises"
-            autoCorrect={false}
-            returnKeyType="search"
-          />
-          <ChipRow>
-            <Chip label="All" selected={!muscle} onPress={() => setMuscle(null)} />
-            {muscleOptions.map((m) => (
-              <Chip
-                key={m}
-                label={MUSCLE_LABELS[m] ?? m.replace(/_/g, ' ')}
-                selected={muscle === m}
-                onPress={() => setMuscle(muscle === m ? null : m)}
+          {preview ? null : (
+            <>
+              <Input
+                value={search}
+                onChangeText={setSearch}
+                placeholder="Search exercises"
+                autoCorrect={false}
+                returnKeyType="search"
               />
-            ))}
-          </ChipRow>
+              <ChipRow>
+                <Chip label="All" selected={!muscle} onPress={() => setMuscle(null)} />
+                {muscleOptions.map((m) => (
+                  <Chip
+                    key={m}
+                    label={MUSCLE_LABELS[m] ?? m.replace(/_/g, ' ')}
+                    selected={muscle === m}
+                    onPress={() => setMuscle(muscle === m ? null : m)}
+                  />
+                ))}
+              </ChipRow>
+            </>
+          )}
         </View>
 
-        <FlatList
-          data={rows}
+        {preview ? (
+          <ScrollView
+            contentContainerStyle={{
+              paddingHorizontal: spacing.lg,
+              paddingTop: spacing.sm,
+              paddingBottom: spacing.xl,
+              gap: spacing.lg,
+            }}
+          >
+            <ExercisePreviewBody exercise={preview} />
+            <Pressable
+              onPress={() => setPreview(null)}
+              accessibilityRole="button"
+              style={{ minHeight: 48, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Txt variant="muted">Back to the list</Txt>
+            </Pressable>
+          </ScrollView>
+        ) : (
+          <FlatList
+            data={rows}
           keyExtractor={(item) => item.id}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.xl, gap: spacing.sm }}
@@ -114,21 +155,38 @@ export function ExercisePicker({
               accessibilityRole="button"
               accessibilityLabel={`Add ${item.name}`}
               style={({ pressed }) => ({
-                padding: spacing.lg,
+                padding: spacing.md,
                 borderRadius: 12,
                 backgroundColor: c.surface,
                 opacity: pressed ? 0.75 : 1,
-                gap: 4,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.md,
               })}
             >
-              <Txt style={{ fontWeight: '700' }}>{item.name}</Txt>
-              <Txt variant="muted">
-                {(item.primary_muscles ?? []).map((m) => MUSCLE_LABELS[m] ?? m).join(' · ')}
-                {item.equipment?.length ? ` · ${item.equipment.map((e) => EQUIPMENT_LABELS[e] ?? e).join(', ')}` : ''}
-              </Txt>
+              <ExerciseThumb exercise={item} size={52} />
+              <View style={{ flex: 1, gap: 4 }}>
+                <Txt style={{ fontWeight: '700' }}>{item.name}</Txt>
+                <Txt variant="muted">
+                  {(item.primary_muscles ?? []).map((m) => MUSCLE_LABELS[m] ?? m).join(' · ')}
+                  {item.equipment?.length
+                    ? ` · ${item.equipment.map((e) => EQUIPMENT_LABELS[e] ?? e).join(', ')}`
+                    : ''}
+                </Txt>
+              </View>
+              <Pressable
+                onPress={() => setPreview(item)}
+                accessibilityRole="button"
+                accessibilityLabel={`Preview ${item.name}`}
+                hitSlop={8}
+                style={{ minHeight: 44, minWidth: 40, alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Ionicons name="information-circle-outline" size={22} color={c.muted} />
+              </Pressable>
             </Pressable>
           )}
         />
+        )}
       </SafeAreaView>
     </Modal>
   );

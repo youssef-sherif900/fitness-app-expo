@@ -74,6 +74,8 @@ export type Exercise = {
   movement_pattern?: string;
   exercise_type?: string;
   description?: string | null;
+  /** RepDB catalog id; selects the bundled illustration. Null for custom exercises. */
+  slug?: string | null;
 };
 
 export type DraftItem = {

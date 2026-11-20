@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Alert } from 'react-native';
+import { Alert, Linking } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { Screen, Txt, Button, Card, Input } from '@/components/ui';
 import { useSession } from '@/auth/session';
@@ -97,6 +97,17 @@ export default function Settings() {
         <Button title="Reset local data" variant="secondary" onPress={resetLocal} loading={resetting} />
       </Card>
       <Button title="Sign out" variant="secondary" onPress={() => useSession.getState().signOut()} />
+      <Card>
+        <Txt variant="label">About</Txt>
+        <Txt variant="muted">
+          Exercise illustrations by RepDB, used under the free-tier licence.
+        </Txt>
+        <Button
+          title="Exercise data by RepDB (repdb.co)"
+          variant="text"
+          onPress={() => void Linking.openURL('https://repdb.co')}
+        />
+      </Card>
       <Card>
         <Txt variant="label">Delete account</Txt>
         <Txt variant="muted">This removes your account and clears data on this device. Type DELETE to confirm.</Txt>

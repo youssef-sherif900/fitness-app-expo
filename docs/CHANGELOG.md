@@ -45,6 +45,13 @@ Verified against `docs/nutrition-training-systems` @ `e2a3bb1`.
 - Program payloads match the backend `ProgramService::dayRules()` shape
   (`rep_range.min/max`), despite the backend’s other training defects.
 
+### Clarified
+
+- `README.md` and `workout-system.md` now state that this docs-only branch is based on
+  `main` @ `089daea`, while the exercise image/guide assets and components described in
+  the workout page are committed on `docs/nutrition-training-systems` @ `e2a3bb1` and
+  are therefore not part of this MR’s diff.
+
 ### Not changed
 
 - No application code, assets, or configuration was modified.

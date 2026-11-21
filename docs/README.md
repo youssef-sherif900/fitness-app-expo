@@ -19,6 +19,12 @@ API contracts drift, and which PRD requirements are not built yet.
 > authoritative files are `src/app/`, `src/api/`, `src/db/`, `src/sync/`,
 > `src/features/` and `app.json`. The README still says "Expo SDK 57"; the installed
 > package is SDK 58. Treat `package.json` as the version source.
+>
+> **Branch note.** This docs-only branch is based on `main` @ `089daea`. The exercise
+> image/guide assets and the `ExerciseVisual` / `ExerciseThumb` / `ExercisePreviewSheet`
+> source described in [workout-system.md](workout-system.md) currently live on
+> `docs/nutrition-training-systems` @ `e2a3bb1`; they are documented as implemented but
+> are not part of this MR's diff.
 
 ## 1. What this app is
 

@@ -6,6 +6,11 @@ missing from the workout experience. The **program authoring** flow is complete;
 
 > Source files: `src/app/program/*`, `src/app/(client)/training.tsx`,
 > `src/features/training/*`, `src/api/endpoints.ts`.
+>
+> **Branch note.** The exercise image assets and `ExerciseVisual` / `ExerciseThumb` /
+> `ExercisePreviewSheet` source described in §7 are committed on
+> `docs/nutrition-training-systems` @ `e2a3bb1`. The docs-only MR is based on `main`
+> @ `089daea`, so those files are documented here but are not in its diff.
 
 ## 1. Scope today
 
